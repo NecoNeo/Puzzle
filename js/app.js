@@ -364,13 +364,19 @@ function _solveBFS (arr, spec) {
 
     //check odd-even
     var S = 0;
+    var gxSum = (spec * spec - 1) * (spec * spec - 2) / 2;
+    var oddEvenFlag = (gxSum / 2 - parseInt(gxSum / 2)) ? 1 : 0;
     for (var g = 0; g < arr.length; g++) {
         for (var h = 0; h < g; h++) {
             if (arr[h] == 0) continue;
             if (arr[h] < arr[g]) S++;
         }
     }
-    if (S / 2 - parseInt(S / 2) != 0) return null;
+    if (oddEvenFlag) {
+        if (S / 2 - parseInt(S / 2) == 0) return null;
+    } else {
+        if (S / 2 - parseInt(S / 2) != 0) return null;
+    }
     
     var t = new _Tree(arr);
     while (l < 10000) {
