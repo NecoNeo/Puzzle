@@ -26,6 +26,16 @@ Puzzle.prototype = {
         }
         this.checkVic();
     },
+
+    reset: function () {
+        for (var i = 0; i < this.matrix.length; i++) {
+            for (var j = 0; j < this.matrix[i].length; j++) {
+                this.matrix[i][j].remove();
+                this.matrix[i][j] = null;
+            }
+        }
+        this.init(this.spec);
+    },
     
     _initMatrix: function (s) {
         var matrix = [];
@@ -44,7 +54,8 @@ Puzzle.prototype = {
             initSerial[s] = s;
         }
         for (var i = initSerial.length - 1; i > 0; i--) {
-            var randomIndex = parseInt(Math.random() * i);
+            var randomIndex = parseInt(Math.random() * i);  //in this case a random serial must can be solved
+            //var randomIndex = Math.round(Math.random() * i);
             var temp = initSerial[i];
             initSerial[i] = initSerial[randomIndex];
             initSerial[randomIndex] = temp;
@@ -59,8 +70,15 @@ Puzzle.prototype = {
                 arr.push(this.matrix[i][j].index);
             }
         }
-        arr["spec"] = this.spec;
+        //arr["spec"] = this.spec;
         return arr;
+    },
+
+    getBlockByPositionNum: function (num) {
+        var x, y;
+        x = Math.floor(num / this.spec);
+        y = num - x * this.spec;
+        return this.matrix[x][y];
     },
     
     _debug: function () {
@@ -196,16 +214,20 @@ Block.prototype = {
         this.$div.animate({
             "top": x * 100,
             "left": y * 100
-        });
+        }, 300);
         return true;
     },
+
+    remove: function () {
+        if (this.$div) this.$div.remove();
+    }
 };
 
 global.Puzzle = Puzzle;
 
 //Puzzle Solution
 
-function Solve (method, arr, spec) {
+function solve (method, arr, spec) {
     var startTime, endTime, solution, result;
     if (!spec) {
         if (arr["spec"]) {
@@ -217,23 +239,39 @@ function Solve (method, arr, spec) {
     startTime = ( new Date() ).valueOf();
     solution = method(arr, spec);
     endTime = ( new Date() ).valueOf();
+    if (solution == null) {
+        console.log('No solution!');
+        return null;
+    }
     result = {
         "solution": solution,
         "elapsedTime": endTime - startTime
     };
+    console.log(result);
     return result;
 }
 
 function _solveBFS (arr, spec) {
     function _swap (ar, a, b) {
-        var temp = ar[a];
-        ar[a] = ar[b];
-        ar[b] = temp;
+        var narr = ar.slice(0);
+        var temp = narr[a];
+        narr[a] = narr[b];
+        narr[b] = temp;
+        return narr;
+    }
+
+    function _getBlankIndex(ar) {
+        var i;
+        for (i = 0; i < ar.length; i++) {
+            if (ar[i] == 0) break;
+        }
+        return i;
     }
 
     function _getMovableIndex (ar, i, spec) {
         var result = [],
             max = spec * spec;
+        
         //   N
         // W 0 E
         //   S      W->E->N->S
@@ -251,25 +289,134 @@ function _solveBFS (arr, spec) {
         return true;
     }
 
-    function _Tree (a, parent, i) {
+    function _Tree (a, parent, i, level, root) {
         this.a = a;
         this.parent = parent || null;
+        this.root = root || this;
+        this.leftChild = null;
+        this.rightChild = null;
         if (i || i === 0) {
             this.i = i;
         } else {
             this.i = null;
         }
-        this.children = {};
+        if (level) {
+            this.level = level;
+            if (!this.root.levels[level]) {
+                this.root.levels[level] = [];
+            }
+            this.root.levels[level].push(this);
+        } else {
+            this.level = 0;
+            this.levels = [];
+            this.levels[0] = [];
+            this.levels[0].push(this);
+        }
+
+        //this.children = {};
     }
     _Tree.prototype.append = function (a, i) {
-        var tree = new _Tree(a, this, i);
-        this.children[i] = tree;
+        //search the tree if this node already exists in the tree
+        var searchResult = this.root.find(a);
+        if (searchResult[0] == 0) return false;
+
+        var level = this.level + 1;
+        var tree = new _Tree(a, this, i, level, this.root);
+        //this.children[i] = tree;
+        if (searchResult[0] == 1) {
+            searchResult[1].leftChild = tree;
+        } else if (searchResult[0] == 2) {
+            searchResult[1].rightChild = tree;
+        }
+
         return tree;
     };
+    _Tree.prototype.find = function (a) {
+        var result;
+        for (var k = 0; k < this.a.length; k++) {
+            if (a[k] < this.a[k]) {
+                if (this.leftChild) {
+                    return this.leftChild.find(a);
+                } else {
+                    return [1, this];
+                }
+            } else if (a[k] > this.a[k]) {
+                if (this.rightChild) {
+                    return this.rightChild.find(a);
+                } else {
+                    return [2, this];
+                }
+            } else {  // a[k] == this.a[k]
+                continue;
+            }
+        }
+        if (!result) return [0, this];
+        return result;
+    };
 
-    var result = [];
-    if (_checkResult()) return result;
-    //check 
+    var result = [], endFlag = false, l = 0;
+    if (_checkResult(arr)) return result;
+
+    //debug use
+    // var ddd = _getBlankIndex([2, 3, 6, 1, 5, 0, 4, 7, 8]);
+    // console.log(ddd);
+    // console.log(_getMovableIndex([2, 3, 6, 1, 5, 0, 4, 7, 8], ddd, 3));
+
+    //check odd-even
+    var S = 0;
+    for (var g = 0; g < arr.length; g++) {
+        for (var h = 0; h < g; h++) {
+            if (arr[h] == 0) continue;
+            if (arr[h] < arr[g]) S++;
+        }
+    }
+    if (S / 2 - parseInt(S / 2) != 0) return null;
+    
+    var t = new _Tree(arr);
+    while (l < 10000) {
+        for (var n = 0; n < t.levels[l].length; n++) {
+            var blank = _getBlankIndex(t.levels[l][n].a);
+            var routes = _getMovableIndex(t.levels[l][n].a, blank, spec);
+            for (var k = 0; k < routes.length; k++) {
+                var newArr = _swap(t.levels[l][n].a, routes[k], blank);
+                //console.log('parsing...');
+                if (_checkResult(newArr)) {
+                    result.push(routes[k]);
+                    var pNode = t.levels[l][n];
+                    while (pNode.parent) {
+                        result.push(pNode.i);
+                        pNode = pNode.parent;
+                    }
+                    endFlag = true;
+                    break;
+                }
+                t.levels[l][n].append(newArr, routes[k]);
+            }
+            if (endFlag) break;
+        }
+        if (endFlag) break;
+        l++;
+    }
+
+    return result;
 }
+
+Puzzle.prototype.solve = function () {
+    var that = this;
+    var result = solve(_solveBFS, this.getCurrentSerial(), this.spec);
+    if (!result) return "No solution!";
+    var solution = result['solution'];
+    var timer = setInterval(function () {
+        var block = that.getBlockByPositionNum(solution.pop());
+        that.pushBlock(block);
+        if (solution.length <= 0) {
+            clearInterval(timer);
+        }
+    }, 500);
+    return "elapsedTime:" + result['elapsedTime'] / 1000 + "seconds";
+};
+
+//solve(_solveBFS, [1, 2, 3, 4, 5, 6, 0, 7, 8], 3);
+//solve(_solveBFS, [2, 3, 6, 1, 5, 0, 4, 7, 8], 3);
 
 })(window);
