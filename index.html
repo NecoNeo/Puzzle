@@ -9,22 +9,38 @@
         <script src="js/app.js"></script>
         <script type="text/javascript">
             $(function () {
-                var SPEC = 3;
-                var puzzle = new Puzzle($("#puzzle"), SPEC);
-                window.puzzle = puzzle;
-                window.pushBlock = function (block) {
-                    puzzle.pushBlock(block);
-                }
+                var SCALE = 3;
+                var puzzle = new Puzzle($("#puzzle"), SCALE);
                 window._cheat = function (a, b) {
                     puzzle._cheat(a, b);
                 };
                 $("#solution").click(function () {
-                    $("#status").html("parsing...");
-                    $("#status").html(puzzle.solve());
+                    // $("#status").html("parsing...");
+                    document.getElementById("status").innerHTML= "parsing...";
+                    setTimeout(function () {
+                        $("#status").html(puzzle.solve());
+                    }, 0);
                 });
+                for (var s = 2; s < 6; s++) {
+                    $("#selectScale").append($("<option value=" + s + ">" + s + "</option>"));
+                }
+                $("#selectScale").val(SCALE);
                 $("#refresh").click(function () {
-                    puzzle.reset();
+                    puzzle.reset($("#selectScale").val());
                 });
+                $("#revert").click(function () {
+                    puzzle.revert();
+                });
+                var methods = puzzle.getAllSolutionMethods(),
+                    $selectEngine = $("#selectEngine");
+                for (var i = 0; i < methods.length; i++) {
+                    $selectEngine.append($("<option value=" + methods[i] + ">" + methods[i] + "</option>"));
+                }
+                $selectEngine.change(function () {
+                    puzzle.setCurrentSolutionMethod($(this).val());
+                });
+                $selectEngine.val(puzzle.getCurrentSolutionMethod());
+
                 document.body.oncontextmenu = function() {return false};
                 document.body.onselectstart = function() {return false};
             });
@@ -33,8 +49,17 @@
     <body>
         <div>
             <button id="refresh">Refresh</button>
+            <button id="revert">Revert</button>
             <button id="solution">Solute</button>
             <span id="status"></span>
+        </div>
+        <div>
+            <span>Engine:</span>
+            <select id="selectEngine">
+            </select>
+            <span>Scale:</span>
+            <select id="selectScale">
+            </select>
         </div>
         <div id="puzzle">
         </div>
