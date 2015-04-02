@@ -84,6 +84,7 @@ Puzzle.prototype = {
             initSerial[i] = initSerial[randomIndex];
             initSerial[randomIndex] = temp;
         }
+        //return [4, 7, 0, 6, 3, 2, 8, 5, 1]; // debug
         return initSerial;
     },
 
@@ -449,8 +450,134 @@ var solutionMethods = {
     return null;
 },
 
+//A*
 "A_Star": function (arr, scale) {
-    return null;
+    function _swap (ar, a, b) {
+        var narr = ar.slice(0);
+        var temp = narr[a];
+        narr[a] = narr[b];
+        narr[b] = temp;
+        return narr;
+    }
+
+    function _getBlankIndex(ar) {
+        var i;
+        for (i = 0; i < ar.length; i++) {
+            if (ar[i] == 0) break;
+        }
+        return i;
+    }
+
+    function _getMovableIndex (ar, i, scale) {
+        var result = [],
+            max = scale * scale;
+        if ( (i - 1 >= 0) && (i / scale - parseInt(i / scale) != 0) ) result.push(i - 1);
+        if ( (i + 1 < max) && ( (i + 1) / scale - parseInt( (i + 1) / scale ) != 0) ) result.push(i + 1);
+        if (i - scale >= 0) result.push(i - scale);
+        if (i + scale < max) result.push(i + scale);
+        return result;
+    }
+
+    function _checkResult (a) {
+        for (var i = 0; i < a.length - 1; i++) {
+            if (a[i] != i + 1) return false;
+        }
+        return true;
+    }
+
+    function Tree (arr, parent, i, s, root) {
+        this.a = arr;
+        this.p = parent || null;
+        if (i || i === 0) {
+            this.i = i;
+        } else {
+            this.i = null;
+        }
+        this.s = s || 0;
+        this.r = root || this;
+        this.pr = this.getPriority();
+    }
+    Tree.prototype.append = function (arr, i) {
+        var node;
+        node = new Tree(arr, this, i, this.s + 1, this.r);
+        return node;
+    };
+    Tree.prototype.clearMem = function () {
+        delete this.a;
+        delete this.s;
+        delete this.pr;
+    };
+    Tree.prototype.getPriority = function () {
+        var f, g, h, k;
+        //if (!this.a) return Infinity;
+        g = this.s;
+        h = 0;
+        //k = scale * scale * 9;
+        for (var i = 0; i < this.a.length; i++) {
+            h += getManhattanDistance(i, this.a[i], scale);
+        }
+        //return (h + g / k);
+        return (h + g / 2);
+    };
+    var getManhattanDistance = function (i, index, scale) {
+        var x, y, x0, y0;
+        x = parseInt(index / scale);
+        y = index - x * scale;
+        x0 = parseInt(i / scale);
+        y0 = i - x0 * scale;
+        return ( Math.abs(x- x0) + Math.abs(y - y0) );
+    };
+
+    function CaseHashTable () {
+        this.length = 0;
+    }
+    CaseHashTable.prototype.insert = function (input) {
+        var hash;
+        if (typeof input == "number") {
+            hash = input;
+        } else {
+            hash = this.getHash(input);
+        }
+        if (this.find(hash)) {
+            return false;
+        } else {
+            this[hash] = 1;
+            return true;
+        }
+    };
+    CaseHashTable.prototype.find = function (s) {
+        var hash;
+        if (typeof s == "number") {
+            hash = s;
+        } else {
+            hash = this.getHash(s);
+        }
+        if (this[hash]) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+    //Cantor expansion
+    CaseHashTable.prototype.getHash = function (arr) {
+        var hash = 0, count;
+        for (var i = arr.length - 1; i >= 0; i--) {
+            count = 0;
+            for (var j = 0; j < i; j++) {
+                if (arr[j] > arr[i]) count++;
+            }
+            hash += fac(i) * count;
+        }
+        //var hash = arr.toString();
+        return hash;
+    };
+    var fac = function (num) {
+        if (num === 0) {
+            return 1;
+        } else {
+            return num * fac (num - 1);
+        }
+    };
 
     function PQueue () {
         this.heap = [];
@@ -459,7 +586,7 @@ var solutionMethods = {
         return this.heap.length;
     };
     PQueue.prototype.deleteMax = function () {
-        var ele, last, minChild,
+        var ele, last, minChild, minChildP, lastP, leftChildP, rightChildP,
             size = this.getSize();
             i = 0;
         if (size <= 0) {
@@ -471,6 +598,7 @@ var solutionMethods = {
         if (size == 0) {
             return ele;
         }
+        lastP = last.pr;
         while (i < size) {
             if (2 * i + 1 >= size) {
                 this.heap[i] = last;
@@ -478,14 +606,19 @@ var solutionMethods = {
             } else {
                 if (2 * i + 2 >= size) {
                     minChild = 2 * i + 1;
+                    minChildP = this.heap[minChild].pr;
                 } else {
-                    if (this.heap[2 * i + 1] <= this.heap[2 * i + 2]) {
+                    leftChildP = this.heap[2 * i + 1].pr;
+                    rightChildP = this.heap[2 * i + 2].pr;
+                    if (leftChildP < rightChildP) {
                         minChild = 2 * i + 1;
+                        minChildP = leftChildP;
                     } else {
                         minChild = 2 * i + 2;
+                        minChildP = rightChildP;
                     }
                 }
-                if (last < this.heap[minChild]) {
+                if (lastP < minChildP) {
                     this.heap[i] = last;
                     return ele;
                 } else {
@@ -499,11 +632,11 @@ var solutionMethods = {
     };
     PQueue.prototype.insert = function (ele) {
         var temp,
-            i = this.getSize();
-        //var eleP = ele.getPriority();
+            i = this.getSize(),
+            eleP = ele.pr;
         while (i > 0) {
             temp = parseInt((i - 1) / 2);
-            if (ele >= this.heap[temp]) {
+            if (eleP >= this.heap[temp].pr) {
                 this.heap[i] = ele;
                 return true;
             }
@@ -517,10 +650,9 @@ var solutionMethods = {
         return false;
     };
 
-    function Tree () {}
-    Tree.prototype.append = function () {};
-    Tree.prototype.find = function () {};
-    Tree.prototype.getPriority = function () {};
+    var result = [],
+        endFlag = false;
+    if (_checkResult(arr)) return result;
 
     //check odd-even
     var S = 0,
@@ -538,13 +670,47 @@ var solutionMethods = {
         if (S & 1) return null;
     }
 
-    var result = [],
-        t = new Tree();
+    var caseTree = new Tree(arr),
+        caseHash = new CaseHashTable();
+        pQ = new PQueue();
+        c = 0;
+    window.caseHash = caseHash;
+    
+    pQ.insert(caseTree);
 
-    do {
-        //
-    } while (1);
+    while (pQ.getSize()) {
+        var currentCaseTN = pQ.deleteMax();
+        var blank = _getBlankIndex(currentCaseTN.a);
+        var routes = _getMovableIndex(currentCaseTN.a, blank, scale);
+        for (var l = 0; l < routes.length; l++) {
+            c++;
+            var newArr = _swap(currentCaseTN.a, routes[l], blank);
+            //console.log(newArr);
 
+            var hash = caseHash.getHash(newArr);
+            if (caseHash.find(hash)) {
+                continue;
+            }
+
+            if (_checkResult(newArr)) {
+                result.push(routes[l]);
+                var pNode = currentCaseTN;
+                while (pNode.p) {
+                    result.push(pNode.i);
+                    pNode = pNode.p;
+                }
+                endFlag = true;
+                break;
+            }
+
+            caseHash.insert(hash);
+            var newTreeNode = currentCaseTN.append(newArr, routes[l]);
+            pQ.insert(newTreeNode);
+        }
+        if (endFlag) break;
+        currentCaseTN.clearMem();
+    }
+    console.log(c + " cases are searched.");
     return result;
 }
 
@@ -594,7 +760,7 @@ Puzzle.prototype.solve = function () {
     return "elapsedTime:" + result['elapsedTime'] / 1000 + "seconds";
 };
 
-//solve(_solveBFS, [1, 2, 3, 4, 5, 6, 0, 7, 8], 3);
-//solve(_solveBFS, [2, 3, 6, 1, 5, 0, 4, 7, 8], 3);
+//solve(solutionMethods["BFS"], [1, 2, 3, 4, 5, 6, 0, 7, 8], 3);
+//solve(solutionMethods["A_Star"], [2, 3, 6, 1, 5, 0, 4, 7, 8], 3);
 
 })(window);
