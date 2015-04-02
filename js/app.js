@@ -409,6 +409,7 @@ var solutionMethods = {
     }
     
     var t = new _Tree(arr);
+    var c = 0;
     while (l < 1000) {
         if (!t.levels[l]) return null;
         for (var n = 0; n < t.levels[l].length; n++) {
@@ -416,6 +417,7 @@ var solutionMethods = {
             var routes = _getMovableIndex(t.levels[l][n].a, blank, scale);
             for (var k = 0; k < routes.length; k++) {
                 var newArr = _swap(t.levels[l][n].a, routes[k], blank);
+                c++;
                 //console.log(newArr);
                 if (_checkResult(newArr)) {
                     result.push(routes[k]);
@@ -433,8 +435,8 @@ var solutionMethods = {
         }
         if (endFlag) break;
         l++;
-        console.log(l);
     }
+    console.log(c + " cases are searched.");
     if (l >= 1000) {
         alert("BFS costet too long time and should be paused.");
         return [];
@@ -450,12 +452,70 @@ var solutionMethods = {
 "A_Star": function (arr, scale) {
     return null;
 
-    function PQueue () {}
-    PQueue.prototype.init = function () {};
-    PQueue.prototype.getSize = function () {};
-    // PQueue.prototype.getMax = function () {};
-    PQueue.prototype.deleteMax = function () {};
-    PQueue.prototype.insert = function () {};
+    function PQueue () {
+        this.heap = [];
+    }
+    PQueue.prototype.getSize = function () {
+        return this.heap.length;
+    };
+    PQueue.prototype.deleteMax = function () {
+        var ele, last, minChild,
+            size = this.getSize();
+            i = 0;
+        if (size <= 0) {
+            return null;
+        }
+        ele = this.heap[0];
+        last = this.heap.pop();
+        size --;
+        if (size == 0) {
+            return ele;
+        }
+        while (i < size) {
+            if (2 * i + 1 >= size) {
+                this.heap[i] = last;
+                return ele;
+            } else {
+                if (2 * i + 2 >= size) {
+                    minChild = 2 * i + 1;
+                } else {
+                    if (this.heap[2 * i + 1] <= this.heap[2 * i + 2]) {
+                        minChild = 2 * i + 1;
+                    } else {
+                        minChild = 2 * i + 2;
+                    }
+                }
+                if (last < this.heap[minChild]) {
+                    this.heap[i] = last;
+                    return ele;
+                } else {
+                    this.heap[i] = this.heap[minChild];
+                    i = minChild;
+                }
+            }
+        }
+        console.log('heap error');
+        return null;
+    };
+    PQueue.prototype.insert = function (ele) {
+        var temp,
+            i = this.getSize();
+        //var eleP = ele.getPriority();
+        while (i > 0) {
+            temp = parseInt((i - 1) / 2);
+            if (ele >= this.heap[temp]) {
+                this.heap[i] = ele;
+                return true;
+            }
+            this.heap[i] = this.heap[temp];
+            i = temp;
+        }
+        if (i == 0) {
+            this.heap[i] = ele;
+            return true;
+        }
+        return false;
+    };
 
     function Tree () {}
     Tree.prototype.append = function () {};
