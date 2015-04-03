@@ -393,20 +393,18 @@ var solutionMethods = {
     // console.log(ddd);
     // console.log(_getMovableIndex([2, 3, 6, 1, 5, 0, 4, 7, 8], ddd, 3));
 
-    //check odd-even
+    //check whether there is answer or not
     var S = 0,
         gxSum = (scale * scale - 1) * (scale * scale - 2) / 2,
-        oddEvenFlag = (gxSum & 1) ? 1 : 0;
+        hasResultFlag = gxSum % (scale - 1);
     for (var g = 0; g < arr.length; g++) {
         for (var h = 0; h < g; h++) {
             if (arr[h] == 0) continue;
             if (arr[h] < arr[g]) S++;
         }
     }
-    if (oddEvenFlag) {
-        if (!(S & 1)) return null;
-    } else {
-        if (S & 1) return null;
+    if ( !( (S % (scale - 1)) == hasResultFlag ) ) {
+        return null;
     }
     
     var t = new _Tree(arr);
@@ -654,20 +652,18 @@ var solutionMethods = {
         endFlag = false;
     if (_checkResult(arr)) return result;
 
-    //check odd-even
+    //check whether there is answer or not
     var S = 0,
         gxSum = (scale * scale - 1) * (scale * scale - 2) / 2,
-        oddEvenFlag = (gxSum & 1) ? 1 : 0;
+        hasResultFlag = gxSum % (scale - 1);
     for (var g = 0; g < arr.length; g++) {
         for (var h = 0; h < g; h++) {
             if (arr[h] == 0) continue;
             if (arr[h] < arr[g]) S++;
         }
     }
-    if (oddEvenFlag) {
-        if (!(S & 1)) return null;
-    } else {
-        if (S & 1) return null;
+    if ( !( (S % (scale - 1)) == hasResultFlag ) ) {
+        return null;
     }
 
     var caseTree = new Tree(arr),
