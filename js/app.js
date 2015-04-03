@@ -417,7 +417,6 @@ var solutionMethods = {
             for (var k = 0; k < routes.length; k++) {
                 var newArr = _swap(t.levels[l][n].a, routes[k], blank);
                 c++;
-                //console.log(newArr);
                 if (_checkResult(newArr)) {
                     result.push(routes[k]);
                     var pNode = t.levels[l][n];
@@ -670,7 +669,6 @@ var solutionMethods = {
         caseHash = new CaseHashTable();
         pQ = new PQueue();
         c = 0;
-    window.caseHash = caseHash;
     
     pQ.insert(caseTree);
 
@@ -681,7 +679,6 @@ var solutionMethods = {
         for (var l = 0; l < routes.length; l++) {
             c++;
             var newArr = _swap(currentCaseTN.a, routes[l], blank);
-            //console.log(newArr);
 
             var hash = caseHash.getHash(newArr);
             if (caseHash.find(hash)) {
