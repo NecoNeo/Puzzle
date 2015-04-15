@@ -416,8 +416,8 @@ var solutionMethods = {
             var routes = _getMovableIndex(t.levels[l][n].a, blank, scale);
             for (var k = 0; k < routes.length; k++) {
                 var newArr = _swap(t.levels[l][n].a, routes[k], blank);
-                c++;
                 if (_checkResult(newArr)) {
+                    c++;
                     result.push(routes[k]);
                     var pNode = t.levels[l][n];
                     while (pNode.parent) {
@@ -427,7 +427,7 @@ var solutionMethods = {
                     endFlag = true;
                     break;
                 }
-                t.levels[l][n].append(newArr, routes[k]);
+                if (t.levels[l][n].append(newArr, routes[k])) c++;
             }
             if (endFlag) break;
         }
@@ -513,11 +513,16 @@ var solutionMethods = {
         for (var i = 0; i < this.a.length; i++) {
             h += getManhattanDistance(i, this.a[i], scale);
         }
-        //return (h + g / k);
-        return (h + g / 2);
+        return (h * 2 + g); 
+        //return (h * 3 + g); //the most optimized g/h when scale3
     };
     var getManhattanDistance = function (i, index, scale) {
         var x, y, x0, y0;
+        if (index == 0) {
+            index = scale * scale - 1;
+        } else {
+            index--;
+        }
         x = parseInt(index / scale);
         y = index - x * scale;
         x0 = parseInt(i / scale);
@@ -666,8 +671,8 @@ var solutionMethods = {
     }
 
     var caseTree = new Tree(arr),
-        caseHash = new CaseHashTable();
-        pQ = new PQueue();
+        caseHash = new CaseHashTable(),
+        pQ = new PQueue(),
         c = 0;
     
     pQ.insert(caseTree);
@@ -677,13 +682,13 @@ var solutionMethods = {
         var blank = _getBlankIndex(currentCaseTN.a);
         var routes = _getMovableIndex(currentCaseTN.a, blank, scale);
         for (var l = 0; l < routes.length; l++) {
-            c++;
             var newArr = _swap(currentCaseTN.a, routes[l], blank);
 
             var hash = caseHash.getHash(newArr);
             if (caseHash.find(hash)) {
                 continue;
             }
+            c++;
 
             if (_checkResult(newArr)) {
                 result.push(routes[l]);
@@ -705,6 +710,131 @@ var solutionMethods = {
     }
     console.log(c + " cases are searched.");
     return result;
+},
+
+//IDA*
+"IDA*": function (arr, scale) {
+    function _swap (ar, a, b) {
+        var narr = ar.slice(0);
+        var temp = narr[a];
+        narr[a] = narr[b];
+        narr[b] = temp;
+        return narr;
+    }
+
+    function _getBlankIndex (ar) {
+        var i;
+        for (i = 0; i < ar.length; i++) {
+            if (ar[i] == 0) break;
+        }
+        return i;
+    }
+
+    function _getMovableIndex (ar, i, scale) {
+        var result = [],
+            max = scale * scale;
+        if ( (i - 1 >= 0) && (i / scale - parseInt(i / scale) != 0) ) result.push(i - 1);
+        if ( (i + 1 < max) && ( (i + 1) / scale - parseInt( (i + 1) / scale ) != 0) ) result.push(i + 1);
+        if (i - scale >= 0) result.push(i - scale);
+        if (i + scale < max) result.push(i + scale);
+        return result;
+    }
+
+    //Cantor expansion
+    function getHash (arr) {
+        var hash = 0, count;
+        for (var i = arr.length - 1; i >= 0; i--) {
+            count = 0;
+            for (var j = 0; j < i; j++) {
+                if (arr[j] > arr[i]) count++;
+            }
+            hash += fac(i) * count;
+        }
+        return hash;
+    }
+    function fac (num) {
+        if (num === 0) {
+            return 1;
+        } else {
+            return num * fac (num - 1);
+        }
+    }
+
+    function getManhattanDistance (i, index, scale) {
+        var x, y, x0, y0;
+        if (index == 0) {
+            index = scale * scale - 1;
+        } else {
+            index--;
+        }
+        x = parseInt(index / scale);
+        y = index - x * scale;
+        x0 = parseInt(i / scale);
+        y0 = i - x0 * scale;
+        return ( Math.abs(x- x0) + Math.abs(y - y0) );
+    }
+
+    function h(arr) {
+        var h = 0;
+        for (var i = 0; i < arr.length; i++) {
+            h += getManhattanDistance(i, arr[i], scale);
+        }
+        return h;
+    }
+
+    //stack for IDDFS
+    function Stack () {
+        this.stack = new Array();
+    }
+    Stack.prototype.push = function (ar, mv, step, hash) {
+        var item = {
+            "a": ar,
+            "mv": mv,
+            "s": step,
+            "h": hash
+        };
+        this.stack.push(item);
+    };
+    Stack.prototype.pop = function () {
+        return this.stack.pop();
+    };
+
+    //IDDFS with heuristic estimate
+    function search (node, g, bound) {
+        //
+    }
+
+    var result = [],
+        endFlag = false,
+        goalHash = getHash((function () {
+            var goalArr = [],
+                max = scale * scale;
+            for (var i = 1; i < max; i++) {
+                goalArr.push(i);
+            }
+            goalArr.push(0);
+            console.log(goalArr);
+            return goalArr;
+        })());
+    if (goalHash == getHash(arr)) return result;
+
+    //check whether there is answer or not
+    var S = 0,
+        gxSum = (scale * scale - 1) * (scale * scale - 2) / 2,
+        hasResultFlag = gxSum % (scale - 1);
+    for (var g = 0; g < arr.length; g++) {
+        for (var h = 0; h < g; h++) {
+            if (arr[h] == 0) continue;
+            if (arr[h] < arr[g]) S++;
+        }
+    }
+    if ( !( (S % (scale - 1)) == hasResultFlag ) ) {
+        return null;
+    }
+
+    return null;
+    var caseHash = new CaseHashTable(),
+        c = 0;
 }
 
 };
@@ -754,6 +884,7 @@ Puzzle.prototype.solve = function () {
 };
 
 //solve(solutionMethods["BFS"], [1, 2, 3, 4, 5, 6, 0, 7, 8], 3);
-//solve(solutionMethods["A_Star"], [2, 3, 6, 1, 5, 0, 4, 7, 8], 3);
+//solve(solutionMethods["A_Star"], [5, 7, 6, 1, 0, 8, 4, 2, 3], 3);
+//solve(solutionMethods["A_Star"], [4, 3, 7, 10, 14, 6, 13, 11, 9, 12, 0, 8, 1, 2, 15, 5], 4);
 
 })(window);
