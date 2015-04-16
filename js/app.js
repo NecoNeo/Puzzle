@@ -443,9 +443,9 @@ var solutionMethods = {
 },
 
 //not implemented yet
-"BFS_improved": function (arr, scale) {
-    return null;
-},
+// "BFS_improved": function (arr, scale) {
+//     return null;
+// },
 
 //A*
 "A_Star": function (arr, scale) {
@@ -519,7 +519,7 @@ var solutionMethods = {
     var getManhattanDistance = function (i, index, scale) {
         var x, y, x0, y0;
         if (index == 0) {
-            index = scale * scale - 1;
+            return 0;
         } else {
             index--;
         }
@@ -714,6 +714,9 @@ var solutionMethods = {
 
 //IDA*
 "IDA*": function (arr, scale) {
+    var result = [],
+        endFlag = false;
+
     function _swap (ar, a, b) {
         var narr = ar.slice(0);
         var temp = narr[a];
@@ -740,30 +743,10 @@ var solutionMethods = {
         return result;
     }
 
-    //Cantor expansion
-    function getHash (arr) {
-        var hash = 0, count;
-        for (var i = arr.length - 1; i >= 0; i--) {
-            count = 0;
-            for (var j = 0; j < i; j++) {
-                if (arr[j] > arr[i]) count++;
-            }
-            hash += fac(i) * count;
-        }
-        return hash;
-    }
-    function fac (num) {
-        if (num === 0) {
-            return 1;
-        } else {
-            return num * fac (num - 1);
-        }
-    }
-
     function getManhattanDistance (i, index, scale) {
         var x, y, x0, y0;
         if (index == 0) {
-            index = scale * scale - 1;
+            return 0;
         } else {
             index--;
         }
@@ -774,7 +757,8 @@ var solutionMethods = {
         return ( Math.abs(x- x0) + Math.abs(y - y0) );
     }
 
-    function h(arr) {
+    //heuristic function
+    function H(arr) {
         var h = 0;
         for (var i = 0; i < arr.length; i++) {
             h += getManhattanDistance(i, arr[i], scale);
@@ -782,64 +766,66 @@ var solutionMethods = {
         return h;
     }
 
-    //stack for IDDFS
-    function Stack () {
-        this.stack = new Array();
-    }
-    Stack.prototype.push = function (ar, mv, step, hash) {
-        var item = {
-            "a": ar,
-            "mv": mv,
-            "s": step,
-            "h": hash
-        };
-        this.stack.push(item);
-    };
-    Stack.prototype.pop = function () {
-        return this.stack.pop();
-    };
-
-    //IDDFS with heuristic estimate
-    function search (node, g, bound) {
-        //
-    }
-
-    var result = [],
-        endFlag = false,
-        goalHash = getHash((function () {
-            var goalArr = [],
-                max = scale * scale;
-            for (var i = 1; i < max; i++) {
-                goalArr.push(i);
-            }
-            goalArr.push(0);
-            console.log(goalArr);
-            return goalArr;
-        })());
-    if (goalHash == getHash(arr)) return result;
-
     //check whether there is answer or not
     var S = 0,
         gxSum = (scale * scale - 1) * (scale * scale - 2) / 2,
         hasResultFlag = gxSum % (scale - 1);
-    for (var g = 0; g < arr.length; g++) {
-        for (var h = 0; h < g; h++) {
-            if (arr[h] == 0) continue;
-            if (arr[h] < arr[g]) S++;
+    for (var z = 0; z < arr.length; z++) {
+        for (var w = 0; w < z; w++) {
+            if (arr[w] == 0) continue;
+            if (arr[w] < arr[z]) S++;
         }
     }
     if ( !( (S % (scale - 1)) == hasResultFlag ) ) {
         return null;
     }
+    var c = 0;
 
+    //IDDFS with heuristic estimate
+    function search (ar, g, bound) {
+        var f, h, min, blank, routes, currentArr, t;
+
+        c++; //debug
+
+        h = H(ar);
+        if (h == 0) return 0;
+        f = g + h;
+        if (f > bound) return f;
+
+        min = Infinity;
+        blank = _getBlankIndex(ar);
+        routes = _getMovableIndex(ar, blank, scale);
+        for (var l = 0; l < routes.length; l++) {
+            var currentArr = _swap(ar, routes[l], blank);
+            t = search(currentArr, g + 1, bound);
+            if (t == 0) {
+                result.push(routes[l]);
+                return 0;
+            }
+            if (t < min) min = t;
+        }
+        return min;
+    }
+
+    //main procedure
+    var b = H(arr);
+    while (b < 10000) {
+        var t = search(arr, 0, b);
+        if (t == 0) {
+            console.log(c + " cases are searched.");//debug
+            return result;
+        }
+        b = t;
+        console.log('Bound increased:' + b);
+    }
+
+    console.log(c + " cases are searched.");//debug
     return null;
-    var caseHash = new CaseHashTable(),
-        c = 0;
 }
 
 };
 
-var currentSolution = solutionMethods['BFS'];
+var currentSolution = solutionMethods['IDA*'];
 
 Puzzle.prototype.getAllSolutionMethods = function () {
     var result = [];
@@ -884,7 +870,9 @@ Puzzle.prototype.solve = function () {
 };
 
 //solve(solutionMethods["BFS"], [1, 2, 3, 4, 5, 6, 0, 7, 8], 3);
-//solve(solutionMethods["A_Star"], [5, 7, 6, 1, 0, 8, 4, 2, 3], 3);
+// solve(solutionMethods["BFS"], [5, 7, 6, 1, 0, 8, 4, 2, 3], 3);
+// solve(solutionMethods["A_Star"], [5, 7, 6, 1, 0, 8, 4, 2, 3], 3);
+// solve(solutionMethods["IDA*"], [5, 7, 6, 1, 0, 8, 4, 2, 3], 3);
 //solve(solutionMethods["A_Star"], [4, 3, 7, 10, 14, 6, 13, 11, 9, 12, 0, 8, 1, 2, 15, 5], 4);
 
 })(window);
