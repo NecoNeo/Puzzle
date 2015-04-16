@@ -435,6 +435,7 @@ var solutionMethods = {
         l++;
     }
     console.log(c + " cases are searched.");
+    console.log(result);
     if (l >= 1000) {
         alert("BFS costet too long time and should be paused.");
         return [];
@@ -679,6 +680,16 @@ var solutionMethods = {
 
     while (pQ.getSize()) {
         var currentCaseTN = pQ.deleteMax();
+        if (_checkResult(currentCaseTN.a)) {
+            result.push(currentCaseTN.i);
+            var pNode = currentCaseTN.p;
+            while (pNode.p) {
+                result.push(pNode.i);
+                pNode = pNode.p;
+            }
+            endFlag = true;
+            break;
+        }
         var blank = _getBlankIndex(currentCaseTN.a);
         var routes = _getMovableIndex(currentCaseTN.a, blank, scale);
         for (var l = 0; l < routes.length; l++) {
@@ -690,17 +701,6 @@ var solutionMethods = {
             }
             c++;
 
-            if (_checkResult(newArr)) {
-                result.push(routes[l]);
-                var pNode = currentCaseTN;
-                while (pNode.p) {
-                    result.push(pNode.i);
-                    pNode = pNode.p;
-                }
-                endFlag = true;
-                break;
-            }
-
             caseHash.insert(hash);
             var newTreeNode = currentCaseTN.append(newArr, routes[l]);
             pQ.insert(newTreeNode);
@@ -709,6 +709,7 @@ var solutionMethods = {
         currentCaseTN.clearMem();
     }
     console.log(c + " cases are searched.");
+    console.log(result);
     return result;
 },
 
@@ -813,13 +814,15 @@ var solutionMethods = {
         var t = search(arr, 0, b);
         if (t == 0) {
             console.log(c + " cases are searched.");//debug
+            console.log(result);
             return result;
         }
         b = t;
-        console.log('Bound increased:' + b);
+        //console.log('Bound increased:' + b);
     }
 
     console.log(c + " cases are searched.");//debug
+    console.log(result);
     return null;
 }
 
