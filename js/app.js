@@ -828,7 +828,7 @@ var solutionMethods = {
 
 };
 
-var currentSolution = solutionMethods['IDA*'];
+var currentSolution = solutionMethods['A_Star'];
 
 Puzzle.prototype.getAllSolutionMethods = function () {
     var result = [];
