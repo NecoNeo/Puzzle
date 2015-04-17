@@ -394,17 +394,20 @@ var solutionMethods = {
     // console.log(_getMovableIndex([2, 3, 6, 1, 5, 0, 4, 7, 8], ddd, 3));
 
     //check whether there is answer or not
+    //check odd-even
     var S = 0,
         gxSum = (scale * scale - 1) * (scale * scale - 2) / 2,
-        hasResultFlag = gxSum % (scale - 1);
+        oddEvenFlag = (gxSum & 1) ? 1 : 0;
     for (var g = 0; g < arr.length; g++) {
         for (var h = 0; h < g; h++) {
             if (arr[h] == 0) continue;
             if (arr[h] < arr[g]) S++;
         }
     }
-    if ( !( (S % (scale - 1)) == hasResultFlag ) ) {
-        return null;
+    if (oddEvenFlag) {
+        if (!(S & 1)) return null;
+    } else {
+        if (S & 1) return null;
     }
     
     var t = new _Tree(arr);
@@ -658,17 +661,20 @@ var solutionMethods = {
     if (_checkResult(arr)) return result;
 
     //check whether there is answer or not
+    //check odd-even
     var S = 0,
         gxSum = (scale * scale - 1) * (scale * scale - 2) / 2,
-        hasResultFlag = gxSum % (scale - 1);
-    for (var g = 0; g < arr.length; g++) {
-        for (var h = 0; h < g; h++) {
-            if (arr[h] == 0) continue;
-            if (arr[h] < arr[g]) S++;
+        oddEvenFlag = (gxSum & 1) ? 1 : 0;
+    for (var v = 0; v < arr.length; v++) {
+        for (var w = 0; w < v; w++) {
+            if (arr[w] == 0) continue;
+            if (arr[w] < arr[v]) S++;
         }
     }
-    if ( !( (S % (scale - 1)) == hasResultFlag ) ) {
-        return null;
+    if (oddEvenFlag) {
+        if (!(S & 1)) return null;
+    } else {
+        if (S & 1) return null;
     }
 
     var caseTree = new Tree(arr),
@@ -680,16 +686,6 @@ var solutionMethods = {
 
     while (pQ.getSize()) {
         var currentCaseTN = pQ.deleteMax();
-        if (_checkResult(currentCaseTN.a)) {
-            result.push(currentCaseTN.i);
-            var pNode = currentCaseTN.p;
-            while (pNode.p) {
-                result.push(pNode.i);
-                pNode = pNode.p;
-            }
-            endFlag = true;
-            break;
-        }
         var blank = _getBlankIndex(currentCaseTN.a);
         var routes = _getMovableIndex(currentCaseTN.a, blank, scale);
         for (var l = 0; l < routes.length; l++) {
@@ -700,6 +696,17 @@ var solutionMethods = {
                 continue;
             }
             c++;
+
+            if (_checkResult(newArr)) {
+                result.push(routes[l]);
+                var pNode = currentCaseTN;
+                while (pNode.p) {
+                    result.push(pNode.i);
+                    pNode = pNode.p;
+                }
+                endFlag = true;
+                break;
+            }
 
             caseHash.insert(hash);
             var newTreeNode = currentCaseTN.append(newArr, routes[l]);
@@ -768,17 +775,20 @@ var solutionMethods = {
     }
 
     //check whether there is answer or not
+    //check odd-even
     var S = 0,
         gxSum = (scale * scale - 1) * (scale * scale - 2) / 2,
-        hasResultFlag = gxSum % (scale - 1);
-    for (var z = 0; z < arr.length; z++) {
-        for (var w = 0; w < z; w++) {
+        oddEvenFlag = (gxSum & 1) ? 1 : 0;
+    for (var v = 0; v < arr.length; v++) {
+        for (var w = 0; w < v; w++) {
             if (arr[w] == 0) continue;
-            if (arr[w] < arr[z]) S++;
+            if (arr[w] < arr[v]) S++;
         }
     }
-    if ( !( (S % (scale - 1)) == hasResultFlag ) ) {
-        return null;
+    if (oddEvenFlag) {
+        if (!(S & 1)) return null;
+    } else {
+        if (S & 1) return null;
     }
     var c = 0;
 
