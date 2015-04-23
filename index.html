@@ -10,10 +10,14 @@
         <script type="text/javascript">
             $(function () {
                 var SCALE = 3;
-                var puzzle = new Puzzle($("#puzzle"), SCALE);
+                var initImgSrc = "pics/1.jpg";
+
+                var puzzle = new Puzzle($("#puzzle"), SCALE, initImgSrc);
+
                 window._cheat = function (a, b) {
                     puzzle._cheat(a, b);
                 };
+
                 $("#solution").click(function () {
                     // $("#status").html("parsing...");
                     document.getElementById("status").innerHTML= "parsing...";
@@ -21,25 +25,42 @@
                         $("#status").html(puzzle.solve());
                     }, 0);
                 });
+
                 for (var s = 3; s < 5; s++) {
                     $("#selectScale").append($("<option value=" + s + ">" + s + "</option>"));
                 }
                 $("#selectScale").val(SCALE);
+
                 $("#refresh").click(function () {
-                    puzzle.reset($("#selectScale").val());
+                    puzzle.initPic($("#selPicSrc").val(), $("#selectScale").val());
                 });
+
                 $("#revert").click(function () {
                     puzzle.revert();
                 });
+
                 var methods = puzzle.getAllSolutionMethods(),
                     $selectEngine = $("#selectEngine");
                 for (var i = 0; i < methods.length; i++) {
                     $selectEngine.append($("<option value=" + methods[i] + ">" + methods[i] + "</option>"));
                 }
+
                 $selectEngine.change(function () {
                     puzzle.setCurrentSolutionMethod($(this).val());
                 });
                 $selectEngine.val(puzzle.getCurrentSolutionMethod());
+
+                function importPic(src) {
+                    $("#selPicSrc").append($('<option value=' + src + '>' + src + '</option>'));
+                }
+
+                importPic(initImgSrc);
+                importPic("pics/2.jpg");
+                $("#selPicSrc").val(initImgSrc);
+
+                $("#setPicSrc").click(function () {
+                    importPic($("#picSrcStr").val());
+                });
 
                 document.body.oncontextmenu = function() {return false};
                 document.body.onselectstart = function() {return false};
@@ -62,6 +83,13 @@
             </select>
         </div>
         <div id="puzzle">
+        </div>
+        <div>
+            <select id="selPicSrc" style="width: 200px;">
+                <option value="" >none</option>
+            </select>
+            <input type="text" id="picSrcStr" />
+            <button id="setPicSrc">Import Picture</button>
         </div>
         <div id="cover" class="hide">
             Calculating...
