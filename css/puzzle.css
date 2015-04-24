@@ -39,9 +39,10 @@ body {
     color: #303030;
     font-family: "Arial" sans-serif;
 }
-.counter {
+.ctr .counter {
     text-align: center;
     font-weight: bold;
+    color: #ff6060;
     display: inline-block;
     min-width: 60px;
 }

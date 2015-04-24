@@ -315,7 +315,6 @@ Puzzle.prototype = {
             } else {
                 that.reset(scale);
             }
-            console.log("pics ready.");
         };
 
         img.onload = createCanvas;
@@ -374,7 +373,7 @@ Block.prototype = {
         this.locked = true;
         var that = this;
         if (this.img) setTimeout(function () {
-            that.$div.show();
+            that.$div.fadeIn(250);
         }, 500);
     },
 
@@ -402,14 +401,14 @@ function solve (method, arr, scale) {
     solution = method(arr, scale);
     endTime = ( new Date() ).valueOf();
     if (solution == null) {
-        console.log('No solution!');
+        console.info('No solution!');
         return null;
     }
     result = {
         "solution": solution,
         "elapsedTime": endTime - startTime
     };
-    console.log(result);
+    console.info(result);
     return result;
 }
 
@@ -572,8 +571,8 @@ var solutionMethods = {
         if (endFlag) break;
         l++;
     }
-    console.log(c + " cases are searched.");
-    console.log(result);
+    console.info(c + " cases are searched.");
+    console.info(result);
     if (l >= 1000) {
         alert("BFS costet too long time and should be paused.");
         return [];
@@ -768,7 +767,7 @@ var solutionMethods = {
                 }
             }
         }
-        console.log('heap error');
+        console.info('heap error');
         return null;
     };
     PQueue.prototype.insert = function (ele) {
@@ -850,8 +849,8 @@ var solutionMethods = {
         if (endFlag) break;
         currentCaseTN.clearMem();
     }
-    console.log(c + " cases are searched.");
-    console.log(result);
+    console.info(c + " cases are searched.");
+    console.info(result);
     return result;
 },
 
@@ -958,16 +957,16 @@ var solutionMethods = {
     while (b < 10000) {
         var t = search(arr, 0, b);
         if (t == 0) {
-            console.log(c + " cases are searched.");//debug
-            console.log(result);
+            console.info(c + " cases are searched.");//debug
+            console.info(result);
             return result;
         }
         b = t;
         //console.log('Bound increased:' + b);
     }
 
-    console.log(c + " cases are searched.");//debug
-    console.log(result);
+    console.info(c + " cases are searched.");//debug
+    console.info(result);
     return null;
 }
 

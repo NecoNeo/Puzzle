@@ -28,7 +28,6 @@
                     }, 0);
                 });
 
-                for (var s = 3; s < 5; s++) {
                     $("#selectScale").append($("<option value=" + s + ">" + s + "</option>"));
                 }
                 $("#selectScale").val(SCALE);
@@ -68,8 +67,8 @@
                     $("#counter").html(puzzle.count);
                 });
 
-                document.body.oncontextmenu = function() {return false};
-                document.body.onselectstart = function() {return false};
+                //document.body.oncontextmenu = function() {return false};
+                //document.body.onselectstart = function() {return false};
             });
         </script>
     </head>
