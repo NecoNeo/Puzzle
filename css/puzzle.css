@@ -3,14 +3,14 @@
 }
 #puzzle {
     position: relative;
-    /*width: 300px;
-    height: 300px;
-    border: solid 1px #000000;*/
+/*    width: 300px;
+    height: 300px;*/
+    border: solid 1px #000000;
 }
 .block {
     position: absolute;
-    width: 98px;
-    height: 98px;
+/*    width: 98px;
+    height: 98px;*/
     border: solid 1px #ffffff;
     text-align: center;
     color: #ffffff;
@@ -19,6 +19,14 @@
     font-size: 50px;
     font-weight: bold;
     line-height: 100px;
+}
+.block canvas, .block img {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    height: 98px;
+    width: 98px;
+    border: none;
 }
 #cover {
     position: fixed;

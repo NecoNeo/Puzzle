@@ -1,5 +1,8 @@
 (function (global) {
 
+
+var BLOCK_SIZE = 98;
+
 /**************************
 * Puzzle Main Programme
 ***************************/
@@ -24,6 +27,10 @@ Puzzle.prototype = {
     picSrc: null,
     
     init: function (scale) {
+        this.$div.css({
+            "width": (BLOCK_SIZE + 2) * scale,
+            "height": (BLOCK_SIZE + 2) * scale
+        });
         this._initMatrix(scale);
         this.initSerial = this._getRandomSerial(scale);
         var index = 0;
@@ -317,17 +324,19 @@ Block.prototype = {
         this.x = x;
         this.y = y;
         this.index = index;
-        if (index) {
-            this.$div = $("<div>" + index + "</div>").addClass("block").css({
-                "top": x * 100,
-                "left": y * 100
-            });
-            if (img) this.$div.append(img);
-            this.$div.appendTo(puzzle.$div);
-            this.$div.click(function () {
-                puzzle.pushBlock(that);
-            });
-        }
+        this.$div = $("<div>" + index + "</div>");
+        if (!index) this.$div.hide();
+        this.$div.addClass("block").css({
+            "top": x * 100,
+            "left": y * 100,
+            "height": BLOCK_SIZE,
+            "width": BLOCK_SIZE
+        });
+        if (img) this.$div.append(img);
+        this.$div.appendTo(puzzle.$div);
+        this.$div.click(function () {
+            puzzle.pushBlock(that);
+        });
     },
     
     move: function (x, y) {
