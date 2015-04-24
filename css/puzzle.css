@@ -1,11 +1,65 @@
+body {
+}
 .hide {
     display: none;
+}
+.ctr button {
+    border: solid 2px #ff6060;
+    color: #ff6060;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 16px;
+    padding: 5px;
+    background-color: #ffffff;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius:5px;
+}
+.ctr button:hover {
+    color: #ff9090;
+    border: solid 2px #ff9090;
+}
+.ctr button:active {
+    color: #ffc0c0;
+    border: solid 2px #ffc0c0;
+}
+.ctr input {
+    border: solid 2px #ff6060;
+    font-size: 14px;
+    font-family: "Arial" sans-serif;
+}
+.ctr select {
+    border: solid 2px #ff6060;
+    font-size: 14px;
+    color: #303030;
+    font-family: "Arial" sans-serif;
+}
+.ctr span {
+    font-size: 14px;
+    color: #303030;
+    font-family: "Arial" sans-serif;
+}
+.counter {
+    text-align: center;
+    font-weight: bold;
+    display: inline-block;
+    min-width: 60px;
+}
+.container {
+    margin: 0;
+    padding: 10px;
+    display: inline-block;
+    background-color: #fff3ff;
+    border: solid 5px #ffa0a0;
+    padding-bottom: 50px;
 }
 #puzzle {
     position: relative;
 /*    width: 300px;
     height: 300px;*/
-    border: solid 1px #000000;
+    border: solid 5px #ff6060;
+    background-color: #ffffff;
+    margin: 30px;
 }
 .block {
     position: absolute;
@@ -14,7 +68,7 @@
     border: solid 1px #ffffff;
     text-align: center;
     color: #ffffff;
-    background-color: #e0c000;
+    background-color: #f09590;
     font: helvetica;
     font-size: 50px;
     font-weight: bold;

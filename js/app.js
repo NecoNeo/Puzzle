@@ -25,8 +25,10 @@ Puzzle.prototype = {
     initSerial: null,
     picMatrix: null,
     picSrc: null,
+    count: 0,
     
     init: function (scale) {
+        this.count = 0;
         this.$div.css({
             "width": (BLOCK_SIZE + 2) * scale,
             "height": (BLOCK_SIZE + 2) * scale
@@ -37,7 +39,13 @@ Puzzle.prototype = {
         if (this.picMatrix) {
             for (var i = 0; i < this.matrix.length; i++) {
                 for (var j = 0; j < this.matrix[i].length; j++) {
-                    this.matrix[i][j] = new Block(this, this.initSerial[index], i, j, this.picMatrix[this.initSerial[index] - 1]);
+                    var picIndex;
+                    if (this.initSerial[index] > 0) {
+                        picIndex = this.picMatrix[this.initSerial[index] - 1];
+                    } else {
+                        picIndex = this.picMatrix[this.picMatrix.length - 1];
+                    }
+                    this.matrix[i][j] = new Block(this, this.initSerial[index], i, j, picIndex);
                     index++;
                 }
             }
@@ -67,6 +75,7 @@ Puzzle.prototype = {
     },
 
     revert: function () {
+        this.count = 0;
         for (var i = 0; i < this.matrix.length; i++) {
             for (var j = 0; j < this.matrix[i].length; j++) {
                 this.matrix[i][j].remove();
@@ -77,7 +86,13 @@ Puzzle.prototype = {
         if (this.picMatrix) {
             for (var i = 0; i < this.matrix.length; i++) {
                 for (var j = 0; j < this.matrix[i].length; j++) {
-                    this.matrix[i][j] = new Block(this, this.initSerial[index], i, j, this.picMatrix[this.initSerial[index] - 1]);
+                    var picIndex;
+                    if (this.initSerial[index] > 0) {
+                        picIndex = this.picMatrix[this.initSerial[index] - 1];
+                    } else {
+                        picIndex = this.picMatrix[this.picMatrix.length - 1];
+                    }
+                    this.matrix[i][j] = new Block(this, this.initSerial[index], i, j, picIndex);
                     index++;
                 }
             }
@@ -170,12 +185,15 @@ Puzzle.prototype = {
     
     _swap: function (x1, y1, x2, y2) {
         var temp;
+        if (this.matrix[x1][y1].locked || this.matrix[x2][y2].locked) return false;
         this.matrix[x1][y1].move(x2, y2);
         this.matrix[x2][y2].move(x1, y1);
         temp = this.matrix[x1][y1];
         this.matrix[x1][y1] = this.matrix[x2][y2];
         this.matrix[x2][y2] = temp;
+        this.count++;
         this.checkVic();
+        return true;
     },
     
     pushBlock: function (block) {
@@ -228,9 +246,14 @@ Puzzle.prototype = {
                 }
                 step++;
                 if (step >= overflow) {
+                    for (var l = 0; l < this.matrix.length; l++) {
+                        for (var m = 0; m < this.matrix[l].length; m++) {
+                            this.matrix[l][m].lock();
+                        }
+                    }
                     setTimeout(function () {
                         alert("Congratulations!");
-                    }, 500);
+                    }, 1000);
                 }
             }
         }
@@ -241,7 +264,7 @@ Puzzle.prototype = {
             this.picMatrix = null;
             this.picSrc = null;
             if (!this.matrix) {
-                that.init(scale);
+                this.init(scale);
             } else {
                 this.reset(scale);
             }
@@ -254,11 +277,11 @@ Puzzle.prototype = {
             var picsLength = scale * scale,
                 x0 = 0,
                 y0 = 0,
-                ix, iy, x, y, w, h, imgW, imgH,
+                imgW = img.width,
+                imgH = img.height,
+                ix, iy, x, y, w, h,
                 cvs, cvsContext, imgBlock,
                 m = [];
-            imgW = img.width;
-            imgH = img.height;
 
             if (imgH > imgW) {
                 y0 = parseInt((imgH -imgW) / 2);
@@ -271,38 +294,30 @@ Puzzle.prototype = {
             w = h = parseInt(imgW / scale);
             //h = parseInt(imgH / scale);
 
-            var i = 0;
-
-            function createBlock () {
-                if (i == (picsLength)) return;
+            for (var i = 0; i < picsLength; i++) {
                 iy = parseInt((i) / scale);
                 ix = parseInt((i) - iy * scale);
                 x = x0 + ix * w;
                 y = y0 + iy * h;
                 cvs = document.createElement('canvas');
-                cvs.setAttribute("width", "98px");
-                cvs.setAttribute("height", "98px");
+                cvs.setAttribute("width",  BLOCK_SIZE + "px");
+                cvs.setAttribute("height", BLOCK_SIZE + "px");
                 cvsContext = cvs.getContext('2d');
-                cvsContext.drawImage(img, x, y, w, h, 0, 0, 98, 98);
+                cvsContext.drawImage(img, x, y, w, h, 0, 0, BLOCK_SIZE, BLOCK_SIZE);
                 var div = document.getElementsByTagName("div")[0];
                 m.push(cvs);
-                i++;
-                if (i == picsLength) {
-                    that.picMatrix = m;
-                    that.picSrc = src;
-                    if (!that.matrix) {
-                        that.init(scale);
-                    } else {
-                        that.reset(scale);
-                    }
-                    console.log("pics ready.");
-                    return;
-                }
-                createBlock();
             }
 
-            createBlock();
+            that.picMatrix = m;
+            that.picSrc = src;
+            if (!that.matrix) {
+                that.init(scale);
+            } else {
+                that.reset(scale);
+            }
+            console.log("pics ready.");
         };
+
         img.onload = createCanvas;
         img.src = src;
     }
@@ -318,6 +333,8 @@ Block.prototype = {
     x: null,
     y: null,
     index: null,
+    img: null,
+    locked: false,
     
     init: function (puzzle, index, x, y, img) {
         var that = this;
@@ -332,7 +349,10 @@ Block.prototype = {
             "height": BLOCK_SIZE,
             "width": BLOCK_SIZE
         });
-        if (img) this.$div.append(img);
+        if (img) {
+            this.img = img;
+            this.$div.append(img);
+        }
         this.$div.appendTo(puzzle.$div);
         this.$div.click(function () {
             puzzle.pushBlock(that);
@@ -348,6 +368,14 @@ Block.prototype = {
             "left": y * 100
         }, 300);
         return true;
+    },
+
+    lock: function () {
+        this.locked = true;
+        var that = this;
+        if (this.img) setTimeout(function () {
+            that.$div.show();
+        }, 500);
     },
 
     remove: function () {
@@ -981,6 +1009,9 @@ Puzzle.prototype.solve = function () {
         if (solution.length > 0) {
             var block = that.getBlockByPositionNum(solution.pop());
             that.pushBlock(block);
+            if ($("#counter")[0]) {
+                $("#counter").html(that.count);
+            }
         }
         if (solution.length <= 0) {
             clearInterval(timer);
